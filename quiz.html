@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multiplication Quiz</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+    #quiz, #result { display: none; }
+    .question { font-size: 24px; margin: 20px; }
+    input { padding: 8px; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+    #review { text-align: left; margin-top: 20px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Multiplication Quiz</h1>
+
+  <div id="start">
+    <p>Enter your details to start:</p>
+    <input id="name" type="text" placeholder="Your Name"><br><br>
+    <input id="age" type="number" placeholder="Your Age"><br><br>
+    <button onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <div id="quiz">
+    <p id="timer">Time left: 20:00</p>
+    <p class="question" id="question"></p>
+    <input id="answer" type="number" placeholder="Enter answer">
+    <button onclick="submitAnswer()">Submit</button>
+    <p id="score">Correct: 0 | Wrong: 0</p>
+  </div>
+
+  <div id="result">
+    <h2>Quiz Finished!</h2>
+    <p id="summary"></p>
+    <h3>Review:</h3>
+    <div id="review"></div>
+  </div>
+
+  <script>
+    let correct = 0, wrong = 0, num1, num2, answer;
+    let review = [];
+    let endTime;
+    let timerInterval;
+    let userName, userAge;
+
+    function startQuiz() {
+      userName = document.getElementById("name").value;
+      userAge = document.getElementById("age").value;
+
+      if (!userName || !userAge) {
+        alert("Please enter your name and age!");
+        return;
+      }
+
+      document.getElementById("start").style.display = "none";
+      document.getElementById("quiz").style.display = "block";
+
+      endTime = Date.now() + 20 * 60 * 1000; // 20 minutes
+      nextQuestion();
+      timerInterval = setInterval(updateTimer, 1000);
+
+      document.getElementById("answer").addEventListener("keyup", function(e) {
+        if (e.key === "Enter") submitAnswer();
+      });
+    }
+
+    function nextQuestion() {
+      num1 = Math.floor(Math.random() * 11) + 2; // 2–12
+      num2 = Math.floor(Math.random() * 11) + 2; // 2–12
+      answer = num1 * num2;
+      document.getElementById("question").textContent = `${num1} × ${num2} = ?`;
+      document.getElementById("answer").value = "";
+      document.getElementById("answer").focus();
+    }
+
+    function submitAnswer() {
+      let userAnswer = parseInt(document.getElementById("answer").value);
+
+      if (!isNaN(userAnswer)) {
+        if (userAnswer === answer) {
+          correct++;
+          review.push(`${num1} × ${num2} = ${userAnswer} ✅ Correct`);
+        } else {
+          wrong++;
+          review.push(`${num1} × ${num2} = ${userAnswer} ❌ Wrong (Correct: ${answer})`);
+        }
+      } else {
+        wrong++;
+        review.push(`${num1} × ${num2} = (Invalid Input) ❌ Wrong (Correct: ${answer})`);
+      }
+
+      document.getElementById("score").textContent = `Correct: ${correct} | Wrong: ${wrong}`;
+      nextQuestion();
+    }
+
+    function updateTimer() {
+      let remaining = endTime - Date.now();
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        finishQuiz();
+        return;
+      }
+      let minutes = Math.floor(remaining / 1000 / 60);
+      let seconds = Math.floor((remaining / 1000) % 60);
+      document.getElementById("timer").textContent =
+        `Time left: ${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    function finishQuiz() {
+      document.getElementById("quiz").style.display = "none";
+      document.getElementById("result").style.display = "block";
+
+      let total = correct + wrong;
+      let percent = total > 0 ? (correct / total) * 100 : 0;
+      let performance =
+        percent >= 90 ? "Excellent" :
+        percent >= 75 ? "Very Good" :
+        percent >= 65 ? "Good" :
+        percent >= 45 ? "Fair" : "Try Again";
+
+      document.getElementById("summary").innerText =
+        `Name: ${userName}\nAge: ${userAge}\n\nCorrect: ${correct}\nWrong: ${wrong}\nScore: ${percent.toFixed(2)}%\nPerformance: ${performance}`;
+
+      document.getElementById("review").innerText = review.join("\n");
+    }
+  </script>
+</body>
+</html>
