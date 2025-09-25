@@ -34,7 +34,7 @@
       font-size: 14pt;
       margin: 20px;
     }
-    input, select {
+    input {
       padding: 8px;
       font-size: 14px;
       margin: 5px;
@@ -72,6 +72,27 @@
       text-align: center;
       line-height: 20px;
     }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+      }
+      #printableResult {
+        border: 5px solid red;
+        padding: 20px;
+        margin: 20px;
+        text-align: left;
+        font-size: 14pt;
+      }
+      #printableResult h1 {
+        text-align: center;
+        font-family: "Arial Black", sans-serif;
+      }
+      #review, .progress-container, .window-buttons, #quiz, #start, #result button {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -89,14 +110,7 @@
     <input id="name" type="text" placeholder="Your Name"><br>
     <input id="age" type="number" placeholder="Your Age"><br>
     <label>Class Level (1–6): </label>
-    <select id="grade">
-      <option value="1">1 - Simple</option>
-      <option value="2">2 - Medium</option>
-      <option value="3">3 - Difficult</option>
-      <option value="4">4 - Hard</option>
-      <option value="5">5 - Harder</option>
-      <option value="6">6 - Hardest</option>
-    </select><br>
+    <input id="grade" type="number" min="1" max="6" placeholder="Enter Grade Level"><br>
     <input id="time" type="number" placeholder="Set time (minutes)" min="1"><br>
     <input id="questions" type="number" placeholder="Number of Questions" min="1"><br>
     <button onclick="startQuiz()">Start Quiz</button>
@@ -116,9 +130,14 @@
 
   <div id="result">
     <h2>Quiz Finished!</h2>
-    <p id="summary"></p>
+    <div id="printableResult">
+      <h1>JangAfrica Learning Centre</h1>
+      <h2>Quiz Result</h2>
+      <p id="summary"></p>
+    </div>
     <h3>Review:</h3>
     <div id="review"></div>
+    <button onclick="printResult()">Print Result</button>
     <button onclick="tryAgain()">Try Again</button>
   </div>
 
@@ -136,7 +155,7 @@
       let timeMinutes = parseInt(document.getElementById("time").value);
       totalQuestions = parseInt(document.getElementById("questions").value);
 
-      if (!userName || !userAge || !timeMinutes || !totalQuestions) {
+      if (!userName || !userAge || !timeMinutes || !totalQuestions || !gradeLevel) {
         alert("Please fill all fields!");
         return;
       }
@@ -159,6 +178,7 @@
         return;
       }
 
+      // Difficulty based on grade level
       let maxNum = [5, 8, 10, 12, 15, 20][gradeLevel - 1];
       num1 = Math.floor(Math.random() * (maxNum - 1)) + 2;
       num2 = Math.floor(Math.random() * (maxNum - 1)) + 2;
@@ -212,14 +232,20 @@
 
       let total = correct + wrong;
       let percent = total > 0 ? (correct / total) * 100 : 0;
-      let performance =
-        percent >= 90 ? "Excellent" :
+      let remark =
+        percent >= 85 ? "Excellent" :
         percent >= 75 ? "Very Good" :
         percent >= 65 ? "Good" :
-        percent >= 45 ? "Fair" : "Try Again";
+        percent >= 50 ? "Fair" : "Need to Adjust";
 
       document.getElementById("summary").innerText =
-        `Name: ${userName}\nAge: ${userAge}\nClass Level: ${gradeLevel}\n\nCorrect: ${correct}\nWrong: ${wrong}\nScore: ${percent.toFixed(2)}%\nPerformance: ${performance}`;
+        `Name: ${userName}
+Age: ${userAge}
+Grade: ${gradeLevel}
+Number of Questions Attempted: ${total}
+Number Correct: ${correct}
+Percentage Score: ${percent.toFixed(2)}%
+Remark: ${remark}`;
 
       document.getElementById("review").innerText = review.join("\n");
     }
@@ -232,7 +258,10 @@
     function tryAgain() {
       location.reload();
     }
+
+    function printResult() {
+      window.print();
+    }
   </script>
 </body>
 </html>
-
