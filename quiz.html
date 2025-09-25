@@ -2,31 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplication Quiz</title>
+  <title>JangAfrica Learning Centre</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      background-color: lightblue;
+    }
+    header {
+      font-family: "Arial Black", sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+      color: black;
+      padding: 10px;
+      position: relative;
+      background: #f0f8ff;
+    }
+    .window-buttons {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+    .window-buttons button {
+      margin-left: 5px;
+      font-size: 14px;
+      padding: 2px 6px;
+    }
     #quiz, #result { display: none; }
-    .question { font-size: 24px; margin: 20px; }
-    input { padding: 8px; font-size: 16px; }
-    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
-    #review { text-align: left; margin-top: 20px; white-space: pre-wrap; }
+    .question {
+      font-size: 14pt;
+      margin: 20px;
+    }
+    input, select {
+      padding: 8px;
+      font-size: 14px;
+      margin: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      background-color: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: darkgreen;
+    }
+    #review { 
+      text-align: left; 
+      margin-top: 20px; 
+      white-space: pre-wrap; 
+    }
+    .progress-container {
+      width: 80%;
+      background: #ddd;
+      margin: 10px auto;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 20px;
+      width: 0%;
+      background: green;
+      color: white;
+      text-align: center;
+      line-height: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>Multiplication Quiz</h1>
+  <header>
+    JangAfrica Learning Centre
+    <div class="window-buttons">
+      <button onclick="window.close()">❌</button>
+      <button onclick="alert('Maximize feature is simulated.')">⬜</button>
+      <button onclick="alert('Minimize feature is simulated.')">➖</button>
+    </div>
+  </header>
 
   <div id="start">
-    <p>Enter your details to start:</p>
-    <input id="name" type="text" placeholder="Your Name"><br><br>
-    <input id="age" type="number" placeholder="Your Age"><br><br>
+    <h2>Enter your details to start:</h2>
+    <input id="name" type="text" placeholder="Your Name"><br>
+    <input id="age" type="number" placeholder="Your Age"><br>
+    <label>Class Level (1–6): </label>
+    <select id="grade">
+      <option value="1">1 - Simple</option>
+      <option value="2">2 - Medium</option>
+      <option value="3">3 - Difficult</option>
+      <option value="4">4 - Hard</option>
+      <option value="5">5 - Harder</option>
+      <option value="6">6 - Hardest</option>
+    </select><br>
+    <input id="time" type="number" placeholder="Set time (minutes)" min="1"><br>
+    <input id="questions" type="number" placeholder="Number of Questions" min="1"><br>
     <button onclick="startQuiz()">Start Quiz</button>
   </div>
 
   <div id="quiz">
-    <p id="timer">Time left: 20:00</p>
+    <p id="timer">Time left: 00:00</p>
+    <div class="progress-container">
+      <div id="progressBar" class="progress-bar">0%</div>
+    </div>
     <p class="question" id="question"></p>
     <input id="answer" type="number" placeholder="Enter answer">
     <button onclick="submitAnswer()">Submit</button>
+    <button onclick="terminateQuiz()">Terminate</button>
     <p id="score">Correct: 0 | Wrong: 0</p>
   </div>
 
@@ -35,28 +119,32 @@
     <p id="summary"></p>
     <h3>Review:</h3>
     <div id="review"></div>
+    <button onclick="tryAgain()">Try Again</button>
   </div>
 
   <script>
     let correct = 0, wrong = 0, num1, num2, answer;
     let review = [];
-    let endTime;
-    let timerInterval;
-    let userName, userAge;
+    let endTime, timerInterval;
+    let userName, userAge, gradeLevel;
+    let totalQuestions, questionCount = 0;
 
     function startQuiz() {
       userName = document.getElementById("name").value;
       userAge = document.getElementById("age").value;
+      gradeLevel = parseInt(document.getElementById("grade").value);
+      let timeMinutes = parseInt(document.getElementById("time").value);
+      totalQuestions = parseInt(document.getElementById("questions").value);
 
-      if (!userName || !userAge) {
-        alert("Please enter your name and age!");
+      if (!userName || !userAge || !timeMinutes || !totalQuestions) {
+        alert("Please fill all fields!");
         return;
       }
 
       document.getElementById("start").style.display = "none";
       document.getElementById("quiz").style.display = "block";
 
-      endTime = Date.now() + 20 * 60 * 1000; // 20 minutes
+      endTime = Date.now() + timeMinutes * 60 * 1000;
       nextQuestion();
       timerInterval = setInterval(updateTimer, 1000);
 
@@ -66,9 +154,16 @@
     }
 
     function nextQuestion() {
-      num1 = Math.floor(Math.random() * 11) + 2; // 2–12
-      num2 = Math.floor(Math.random() * 11) + 2; // 2–12
+      if (questionCount >= totalQuestions) {
+        finishQuiz();
+        return;
+      }
+
+      let maxNum = [5, 8, 10, 12, 15, 20][gradeLevel - 1];
+      num1 = Math.floor(Math.random() * (maxNum - 1)) + 2;
+      num2 = Math.floor(Math.random() * (maxNum - 1)) + 2;
       answer = num1 * num2;
+
       document.getElementById("question").textContent = `${num1} × ${num2} = ?`;
       document.getElementById("answer").value = "";
       document.getElementById("answer").focus();
@@ -76,21 +171,18 @@
 
     function submitAnswer() {
       let userAnswer = parseInt(document.getElementById("answer").value);
+      questionCount++;
 
-      if (!isNaN(userAnswer)) {
-        if (userAnswer === answer) {
-          correct++;
-          review.push(`${num1} × ${num2} = ${userAnswer} ✅ Correct`);
-        } else {
-          wrong++;
-          review.push(`${num1} × ${num2} = ${userAnswer} ❌ Wrong (Correct: ${answer})`);
-        }
+      if (!isNaN(userAnswer) && userAnswer === answer) {
+        correct++;
+        review.push(`${num1} × ${num2} = ${userAnswer} ✅ Correct`);
       } else {
         wrong++;
-        review.push(`${num1} × ${num2} = (Invalid Input) ❌ Wrong (Correct: ${answer})`);
+        review.push(`${num1} × ${num2} = ${isNaN(userAnswer) ? "(blank)" : userAnswer} ❌ Wrong (Correct: ${answer})`);
       }
 
       document.getElementById("score").textContent = `Correct: ${correct} | Wrong: ${wrong}`;
+      updateProgress();
       nextQuestion();
     }
 
@@ -103,8 +195,15 @@
       }
       let minutes = Math.floor(remaining / 1000 / 60);
       let seconds = Math.floor((remaining / 1000) % 60);
-      document.getElementById("timer").textContent =
+      document.getElementById("timer").textContent = 
         `Time left: ${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    function updateProgress() {
+      let percent = Math.floor((questionCount / totalQuestions) * 100);
+      let bar = document.getElementById("progressBar");
+      bar.style.width = percent + "%";
+      bar.textContent = percent + "%";
     }
 
     function finishQuiz() {
@@ -120,10 +219,20 @@
         percent >= 45 ? "Fair" : "Try Again";
 
       document.getElementById("summary").innerText =
-        `Name: ${userName}\nAge: ${userAge}\n\nCorrect: ${correct}\nWrong: ${wrong}\nScore: ${percent.toFixed(2)}%\nPerformance: ${performance}`;
+        `Name: ${userName}\nAge: ${userAge}\nClass Level: ${gradeLevel}\n\nCorrect: ${correct}\nWrong: ${wrong}\nScore: ${percent.toFixed(2)}%\nPerformance: ${performance}`;
 
       document.getElementById("review").innerText = review.join("\n");
+    }
+
+    function terminateQuiz() {
+      clearInterval(timerInterval);
+      finishQuiz();
+    }
+
+    function tryAgain() {
+      location.reload();
     }
   </script>
 </body>
 </html>
+
