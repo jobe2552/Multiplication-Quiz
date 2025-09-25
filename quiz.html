@@ -6,30 +6,22 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-color: lightblue;
       text-align: center;
       margin: 0;
-      background-color: lightblue;
+      padding: 20px;
     }
-    header {
+
+    h1.title {
       font-family: "Arial Black", sans-serif;
       font-size: 24px;
-      font-weight: bold;
       color: black;
-      padding: 10px;
-      background: #f0f8ff;
+      font-weight: bold;
     }
+
     #quiz, #result { display: none; }
-    .question {
-      font-size: 14pt;
-      margin: 20px;
-    }
-    input, select {
-      padding: 8px;
-      font-size: 14px;
-      margin: 5px;
-      width: 80%;
-      max-width: 300px;
-    }
+    .question { font-size: 14pt; margin: 20px; }
+    input, select { padding: 8px; font-size: 16px; margin: 5px; }
     button {
       padding: 10px 20px;
       font-size: 16px;
@@ -37,31 +29,18 @@
       background-color: green;
       color: white;
       border: none;
-      cursor: pointer;
       border-radius: 5px;
+      cursor: pointer;
     }
-    button:hover {
-      background-color: darkgreen;
-    }
-    .progress-container {
-      width: 80%;
+    #progressBar {
+      width: 100%;
       background: #ddd;
-      margin: 10px auto;
-      border-radius: 10px;
-      overflow: hidden;
+      margin: 10px 0;
     }
-    .progress-bar {
+    #progressBar div {
       height: 20px;
       width: 0%;
       background: green;
-      color: white;
-      text-align: center;
-      line-height: 20px;
-    }
-    #review { 
-      text-align: left; 
-      margin-top: 20px; 
-      white-space: pre-wrap; 
     }
 
     /* Print Styles */
@@ -69,71 +48,55 @@
       body { background: white; }
       #printArea {
         padding: 40px;
-        width: 100%;
         text-align: center;
+        width: 100%;
       }
-      #printArea h2, #printArea p {
-        margin: 10px 0;
+      #printArea h1, #printArea h2, #printArea p {
+        margin: 8px 0;
       }
       .signature {
         margin-top: 60px;
-        border-top: 2px solid black;
-        width: 200px;
-        margin-left: auto;
-        margin-right: auto;
-        padding-top: 5px;
+        text-align: center;
       }
-      .signature p {
-        margin-top: 5px;
-        font-weight: bold;
-      }
-      button, #quiz, #review { display: none !important; }
+      /* Hide everything except print area */
+      button, #quiz, #result, #start { display: none !important; }
     }
   </style>
 </head>
 <body>
-  <header>JangAfrica Learning Centre</header>
+  <h1 class="title">JangAfrica Learning Centre</h1>
 
+  <!-- Start Section -->
   <div id="start">
-    <h2>Enter your details to start:</h2>
+    <p>Enter your details to start:</p>
     <input id="name" type="text" placeholder="Your Name"><br>
     <input id="age" type="number" placeholder="Your Age"><br>
-    <label>Class Level (1–6): </label>
-    <select id="grade">
-      <option value="1">1 - Simple</option>
-      <option value="2">2 - Medium</option>
-      <option value="3">3 - Difficult</option>
-      <option value="4">4 - Hard</option>
-      <option value="5">5 - Harder</option>
-      <option value="6">6 - Hardest</option>
-    </select><br>
-    <input id="time" type="number" placeholder="Set time (minutes)" min="1"><br>
-    <input id="questions" type="number" placeholder="Number of Questions" min="1"><br>
+    <input id="grade" type="number" placeholder="Class Level (1-6)" min="1" max="6"><br>
+    <input id="numQuestions" type="number" placeholder="Number of Questions" min="1"><br>
+    <input id="timeLimit" type="number" placeholder="Time in Minutes" min="1"><br>
     <button onclick="startQuiz()">Start Quiz</button>
   </div>
 
+  <!-- Quiz Section -->
   <div id="quiz">
     <p id="timer">Time left: 00:00</p>
-    <div class="progress-container">
-      <div id="progressBar" class="progress-bar">0%</div>
-    </div>
+    <div id="progressBar"><div></div></div>
     <p class="question" id="question"></p>
     <input id="answer" type="number" placeholder="Enter answer">
     <button onclick="submitAnswer()">Submit</button>
-    <button onclick="terminateQuiz()">Terminate</button>
     <p id="score">Correct: 0 | Wrong: 0</p>
+    <button onclick="finishQuiz()">Terminate</button>
   </div>
 
+  <!-- Result Section -->
   <div id="result">
     <h2>Quiz Finished!</h2>
     <p id="summary"></p>
-    <h3>Review:</h3>
-    <div id="review"></div>
     <button onclick="printResult()">Print Result</button>
-    <button onclick="tryAgain()">Start New Quiz</button>
+    <button onclick="restartQuiz()">Start New Quiz</button>
   </div>
 
-  <!-- Hidden printable section -->
+  <!-- Hidden Printable Section -->
   <div id="printArea" style="display:none;">
     <h1>JangAfrica Learning Centre</h1>
     <h2>Quiz Result</h2>
@@ -145,26 +108,27 @@
     <p id="printPercentage"></p>
     <p id="printRemark"></p>
     <p id="printDate"></p>
+
     <div class="signature">
+      <p>__________________________</p>
       <p>Mr. Ebrima Jobe</p>
     </div>
   </div>
 
   <script>
     let correct = 0, wrong = 0, num1, num2, answer;
-    let review = [];
+    let totalQuestions, attempted = 0;
     let endTime, timerInterval;
-    let userName, userAge, gradeLevel;
-    let totalQuestions, questionCount = 0;
+    let userName, userAge, userGrade, timeLimit;
 
     function startQuiz() {
       userName = document.getElementById("name").value;
       userAge = document.getElementById("age").value;
-      gradeLevel = parseInt(document.getElementById("grade").value);
-      let timeMinutes = parseInt(document.getElementById("time").value);
-      totalQuestions = parseInt(document.getElementById("questions").value);
+      userGrade = parseInt(document.getElementById("grade").value);
+      totalQuestions = parseInt(document.getElementById("numQuestions").value);
+      timeLimit = parseInt(document.getElementById("timeLimit").value);
 
-      if (!userName || !userAge || !timeMinutes || !totalQuestions) {
+      if (!userName || !userAge || !userGrade || !totalQuestions || !timeLimit) {
         alert("Please fill all fields!");
         return;
       }
@@ -172,7 +136,7 @@
       document.getElementById("start").style.display = "none";
       document.getElementById("quiz").style.display = "block";
 
-      endTime = Date.now() + timeMinutes * 60 * 1000;
+      endTime = Date.now() + timeLimit * 60 * 1000;
       nextQuestion();
       timerInterval = setInterval(updateTimer, 1000);
 
@@ -181,37 +145,53 @@
       });
     }
 
+    function getDifficultyMultiplier(grade) {
+      switch (grade) {
+        case 1: return 5;    // simple
+        case 2: return 10;   // medium
+        case 3: return 20;   // difficult
+        case 4: return 50;   // hard
+        case 5: return 100;  // harder
+        case 6: return 200;  // hardest
+        default: return 10;
+      }
+    }
+
     function nextQuestion() {
-      if (questionCount >= totalQuestions) {
+      if (attempted >= totalQuestions) {
         finishQuiz();
         return;
       }
 
-      let maxNum = [5, 8, 10, 12, 15, 20][gradeLevel - 1];
-      num1 = Math.floor(Math.random() * (maxNum - 1)) + 2;
-      num2 = Math.floor(Math.random() * (maxNum - 1)) + 2;
+      let multiplier = getDifficultyMultiplier(userGrade);
+      num1 = Math.floor(Math.random() * multiplier) + 1;
+      num2 = Math.floor(Math.random() * multiplier) + 1;
       answer = num1 * num2;
 
       document.getElementById("question").textContent = `${num1} × ${num2} = ?`;
       document.getElementById("answer").value = "";
       document.getElementById("answer").focus();
+
+      updateProgress();
     }
 
     function submitAnswer() {
       let userAnswer = parseInt(document.getElementById("answer").value);
-      questionCount++;
+      attempted++;
 
       if (!isNaN(userAnswer) && userAnswer === answer) {
         correct++;
-        review.push(`${num1} × ${num2} = ${userAnswer} ✅ Correct`);
       } else {
         wrong++;
-        review.push(`${num1} × ${num2} = ${isNaN(userAnswer) ? "(blank)" : userAnswer} ❌ Wrong (Correct: ${answer})`);
       }
 
       document.getElementById("score").textContent = `Correct: ${correct} | Wrong: ${wrong}`;
-      updateProgress();
       nextQuestion();
+    }
+
+    function updateProgress() {
+      let percent = (attempted / totalQuestions) * 100;
+      document.querySelector("#progressBar div").style.width = percent + "%";
     }
 
     function updateTimer() {
@@ -223,62 +203,51 @@
       }
       let minutes = Math.floor(remaining / 1000 / 60);
       let seconds = Math.floor((remaining / 1000) % 60);
-      document.getElementById("timer").textContent = 
+      document.getElementById("timer").textContent =
         `Time left: ${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
     }
 
-    function updateProgress() {
-      let percent = Math.floor((questionCount / totalQuestions) * 100);
-      let bar = document.getElementById("progressBar");
-      bar.style.width = percent + "%";
-      bar.textContent = percent + "%";
-    }
-
     function finishQuiz() {
+      clearInterval(timerInterval);
       document.getElementById("quiz").style.display = "none";
       document.getElementById("result").style.display = "block";
 
-      let total = correct + wrong;
-      let percent = total > 0 ? (correct / total) * 100 : 0;
+      let percent = (correct / attempted) * 100;
       let remark =
         percent >= 85 ? "Excellent" :
         percent >= 75 ? "Very Good" :
         percent >= 65 ? "Good" :
         percent >= 50 ? "Fair" : "Need to Adjust";
 
-      let now = new Date();
-      let dateStr = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+      let date = new Date().toLocaleString();
 
       document.getElementById("summary").innerText =
-        `Name: ${userName}\nAge: ${userAge}\nClass Level: ${gradeLevel}\n\nCorrect: ${correct}\nWrong: ${wrong}\nScore: ${percent.toFixed(2)}%\nRemark: ${remark}\nDate: ${dateStr}`;
+        `Name: ${userName}\nAge: ${userAge}\nClass Level: ${userGrade}\n` +
+        `Number of Questions Attempted: ${attempted}\nNumber Correct: ${correct}\n` +
+        `Percentage Score: ${percent.toFixed(2)}%\nRemark: ${remark}\nDate & Time: ${date}`;
 
-      document.getElementById("review").innerText = review.join("\n");
-
-      // Fill print section
-      document.getElementById("printName").innerText = "Name: " + userName;
-      document.getElementById("printAge").innerText = "Age: " + userAge;
-      document.getElementById("printGrade").innerText = "Class Level: " + gradeLevel;
-      document.getElementById("printAttempted").innerText = "Number of Questions Attempted: " + total;
-      document.getElementById("printCorrect").innerText = "Number Correct: " + correct;
-      document.getElementById("printPercentage").innerText = "Percentage Score: " + percent.toFixed(2) + "%";
-      document.getElementById("printRemark").innerText = "Remark: " + remark;
-      document.getElementById("printDate").innerText = "Date & Time: " + dateStr;
-    }
-
-    function terminateQuiz() {
-      clearInterval(timerInterval);
-      finishQuiz();
-    }
-
-    function tryAgain() {
-      location.reload();
+      // Fill printable section
+      document.getElementById("printName").innerText = `Name: ${userName}`;
+      document.getElementById("printAge").innerText = `Age: ${userAge}`;
+      document.getElementById("printGrade").innerText = `Class Level: ${userGrade}`;
+      document.getElementById("printAttempted").innerText = `Number of Questions Attempted: ${attempted}`;
+      document.getElementById("printCorrect").innerText = `Number Correct: ${correct}`;
+      document.getElementById("printPercentage").innerText = `Percentage Score: ${percent.toFixed(2)}%`;
+      document.getElementById("printRemark").innerText = `Remark: ${remark}`;
+      document.getElementById("printDate").innerText = `Date & Time: ${date}`;
     }
 
     function printResult() {
-      let printArea = document.getElementById("printArea");
-      printArea.style.display = "block";
+      document.getElementById("printArea").style.display = "block";
       window.print();
-      printArea.style.display = "none";
+      document.getElementById("printArea").style.display = "none";
+    }
+
+    function restartQuiz() {
+      correct = 0; wrong = 0; attempted = 0;
+      document.getElementById("result").style.display = "none";
+      document.getElementById("start").style.display = "block";
+      document.querySelector("#progressBar div").style.width = "0%";
     }
   </script>
 </body>
