@@ -16,28 +16,19 @@
       font-weight: bold;
       color: black;
       padding: 10px;
-      position: relative;
       background: #f0f8ff;
-    }
-    .window-buttons {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-    }
-    .window-buttons button {
-      margin-left: 5px;
-      font-size: 14px;
-      padding: 2px 6px;
     }
     #quiz, #result { display: none; }
     .question {
       font-size: 14pt;
       margin: 20px;
     }
-    input {
+    input, select {
       padding: 8px;
       font-size: 14px;
       margin: 5px;
+      width: 80%;
+      max-width: 300px;
     }
     button {
       padding: 10px 20px;
@@ -51,11 +42,6 @@
     }
     button:hover {
       background-color: darkgreen;
-    }
-    #review { 
-      text-align: left; 
-      margin-top: 20px; 
-      white-space: pre-wrap; 
     }
     .progress-container {
       width: 80%;
@@ -72,45 +58,53 @@
       text-align: center;
       line-height: 20px;
     }
+    #review { 
+      text-align: left; 
+      margin-top: 20px; 
+      white-space: pre-wrap; 
+    }
 
     /* Print Styles */
     @media print {
-      body {
-        background: white !important;
-      }
-      #printableResult {
-        border: 5px solid red;
-        padding: 20px;
-        margin: 20px;
-        text-align: left;
-        font-size: 14pt;
-      }
-      #printableResult h1 {
+      body { background: white; }
+      #printArea {
+        border: 8px solid green;
+        padding: 40px;
+        width: 100%;
+        height: 100%;
         text-align: center;
-        font-family: "Arial Black", sans-serif;
+        page-break-after: avoid;
       }
-      #review, .progress-container, .window-buttons, #quiz, #start, #result button {
-        display: none !important;
+      #printArea h2, #printArea p {
+        margin: 10px 0;
       }
+      .signature {
+        margin-top: 60px;
+        border-top: 2px solid black;
+        width: 200px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      button, #quiz, #review { display: none !important; }
     }
   </style>
 </head>
 <body>
-  <header>
-    JangAfrica Learning Centre
-    <div class="window-buttons">
-      <button onclick="window.close()">❌</button>
-      <button onclick="alert('Maximize feature is simulated.')">⬜</button>
-      <button onclick="alert('Minimize feature is simulated.')">➖</button>
-    </div>
-  </header>
+  <header>JangAfrica Learning Centre</header>
 
   <div id="start">
     <h2>Enter your details to start:</h2>
     <input id="name" type="text" placeholder="Your Name"><br>
     <input id="age" type="number" placeholder="Your Age"><br>
     <label>Class Level (1–6): </label>
-    <input id="grade" type="number" min="1" max="6" placeholder="Enter Grade Level"><br>
+    <select id="grade">
+      <option value="1">1 - Simple</option>
+      <option value="2">2 - Medium</option>
+      <option value="3">3 - Difficult</option>
+      <option value="4">4 - Hard</option>
+      <option value="5">5 - Harder</option>
+      <option value="6">6 - Hardest</option>
+    </select><br>
     <input id="time" type="number" placeholder="Set time (minutes)" min="1"><br>
     <input id="questions" type="number" placeholder="Number of Questions" min="1"><br>
     <button onclick="startQuiz()">Start Quiz</button>
@@ -130,15 +124,26 @@
 
   <div id="result">
     <h2>Quiz Finished!</h2>
-    <div id="printableResult">
-      <h1>JangAfrica Learning Centre</h1>
-      <h2>Quiz Result</h2>
-      <p id="summary"></p>
-    </div>
+    <p id="summary"></p>
     <h3>Review:</h3>
     <div id="review"></div>
     <button onclick="printResult()">Print Result</button>
-    <button onclick="tryAgain()">Try Again</button>
+    <button onclick="tryAgain()">Start New Quiz</button>
+  </div>
+
+  <!-- Hidden printable section -->
+  <div id="printArea" style="display:none;">
+    <h1>JangAfrica Learning Centre</h1>
+    <h2>Quiz Result</h2>
+    <p id="printName"></p>
+    <p id="printAge"></p>
+    <p id="printGrade"></p>
+    <p id="printAttempted"></p>
+    <p id="printCorrect"></p>
+    <p id="printPercentage"></p>
+    <p id="printRemark"></p>
+    <p id="printDate"></p>
+    <div class="signature">Signature</div>
   </div>
 
   <script>
@@ -155,7 +160,7 @@
       let timeMinutes = parseInt(document.getElementById("time").value);
       totalQuestions = parseInt(document.getElementById("questions").value);
 
-      if (!userName || !userAge || !timeMinutes || !totalQuestions || !gradeLevel) {
+      if (!userName || !userAge || !timeMinutes || !totalQuestions) {
         alert("Please fill all fields!");
         return;
       }
@@ -178,7 +183,6 @@
         return;
       }
 
-      // Difficulty based on grade level
       let maxNum = [5, 8, 10, 12, 15, 20][gradeLevel - 1];
       num1 = Math.floor(Math.random() * (maxNum - 1)) + 2;
       num2 = Math.floor(Math.random() * (maxNum - 1)) + 2;
@@ -238,16 +242,23 @@
         percent >= 65 ? "Good" :
         percent >= 50 ? "Fair" : "Need to Adjust";
 
+      let now = new Date();
+      let dateStr = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+
       document.getElementById("summary").innerText =
-        `Name: ${userName}
-Age: ${userAge}
-Grade: ${gradeLevel}
-Number of Questions Attempted: ${total}
-Number Correct: ${correct}
-Percentage Score: ${percent.toFixed(2)}%
-Remark: ${remark}`;
+        `Name: ${userName}\nAge: ${userAge}\nClass Level: ${gradeLevel}\n\nCorrect: ${correct}\nWrong: ${wrong}\nScore: ${percent.toFixed(2)}%\nRemark: ${remark}\nDate: ${dateStr}`;
 
       document.getElementById("review").innerText = review.join("\n");
+
+      // Fill print section
+      document.getElementById("printName").innerText = "Name: " + userName;
+      document.getElementById("printAge").innerText = "Age: " + userAge;
+      document.getElementById("printGrade").innerText = "Class Level: " + gradeLevel;
+      document.getElementById("printAttempted").innerText = "Number of Questions Attempted: " + total;
+      document.getElementById("printCorrect").innerText = "Number Correct: " + correct;
+      document.getElementById("printPercentage").innerText = "Percentage Score: " + percent.toFixed(2) + "%";
+      document.getElementById("printRemark").innerText = "Remark: " + remark;
+      document.getElementById("printDate").innerText = "Date & Time: " + dateStr;
     }
 
     function terminateQuiz() {
@@ -260,7 +271,10 @@ Remark: ${remark}`;
     }
 
     function printResult() {
+      let printArea = document.getElementById("printArea");
+      printArea.style.display = "block";
       window.print();
+      printArea.style.display = "none";
     }
   </script>
 </body>
